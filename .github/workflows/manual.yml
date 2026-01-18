@@ -1,41 +1,37 @@
-# This is a basic workflow that is manually triggered
+name: k6 Performance Test
 
-name: Manual workflow
-
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
-    # Inputs the workflow accepts.
-    inputs:
-      name:
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Person to greet'
-        # Default value if no value is explicitly provided
-        default: 'World'
-        # Input has to be provided for the workflow to run
-        required: true
-        # The data type of the input
-        type: string
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
+  k6-test:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
-    - name: Send greeting
-      run: echo "Hello ${{ inputs.name }}"
-    - name: Run k6 test and save results
-      run: |
+      # 1️⃣ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Install k6 (THIS WAS MISSING)
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+
+      # 3️⃣ Verify k6 installation (optional but recommended)
+      - name: Verify k6
+        run: k6 version
+
+      # 4️⃣ Run k6 test and save results
+      - name: Run k6 test
+        run: |
           k6 run --out json=results.json scripts/load_test.js
 
-    - name: Upload results
-      uses: actions/upload-artifact@v4
-      with:
-        name: k6-results
-        path: results.json
+      # 5️⃣ Upload results
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: results.json
